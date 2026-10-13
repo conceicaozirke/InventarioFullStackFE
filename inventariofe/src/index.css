@@ -1,0 +1,13 @@
+/* Reseta margens e garante que a raiz ocupe 100% da tela para o Flexbox funcionar */
+html, body, #root {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+*, *:before, *:after {
+    box-sizing: inherit;
+}

@@ -1,0 +1,39 @@
+/* Fundo global Branco-Gelo */
+body {
+    margin: 0;
+    background-color: #f4f6f8;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #2c3e50;
+}
+
+/* Layout geral dividindo espaço com a sidebar lateral */
+.page-wrapper {
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+
+.content, .container {
+    flex: 1;
+    height: 100vh;
+    overflow: auto; /* Habilita rolagem automática tanto na vertical quanto na horizontal quando necessário */
+    padding: 30px;
+    background-color: #f4f5f7;
+    box-sizing: border-box;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a252f;
+    margin-bottom: 20px;
+    letter-spacing: -0.5px;
+}
+
+.status-text {
+    color: #5a6a75;
+    font-size: 15px;
+}

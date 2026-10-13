@@ -1,0 +1,9 @@
+# Pastas de compilação (lixo que não deve ir pro Git)
+bin/
+obj/
+.vs/
+
+# Arquivos temporários e de usuário do Visual Studio
+*.user
+*.userosscache
+*.sln.docstates
