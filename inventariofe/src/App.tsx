@@ -2,7 +2,6 @@
 import Navbar from './components/Navbar'; // Mantém o seu import original
 import { DocTypeIndex, DocTypeAdd, DocTypeDelete, DocTypeEdit } from './pages/DocType';
 import './App.css';
-import React from 'react';
 
 export function App() {
     const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -22,6 +21,8 @@ export function App() {
                 return <DocTypeAdd />;
             case '/DocTypeIndex':
                 return <DocTypeIndex />;
+            case '/DocTypeEdit':
+                return <DocTypeEdit />;
             case '/':
             default:
                 return (

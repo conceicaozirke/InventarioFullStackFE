@@ -1,5 +1,4 @@
-﻿import React from 'react';
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import './Navbar.css';
 
 interface NavbarProps {
@@ -58,17 +57,11 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                             <span>Tipos de documentos</span>
                             <span className="arrow">{openMenus['documentos'] ? '▼' : '▶'}</span>
                         </button>
+
                         {openMenus['documentos'] && (
+
                             <div className="sidebar-submenu">
-                                <a
-                                    href="#visualizar"
-                                    className="sidebar-sub-item"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        window.location.href = '/DocTypeAdd';
-                                    }}
-                                >3.1.1- Adicionar</a>
-                                <a href="insira link aqui" className="sidebar-sub-item">3.1.2- Remover/Editar</a>
+
                                 <a
                                     href="#visualizar"
                                     className="sidebar-sub-item"
@@ -76,9 +69,33 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                                         e.preventDefault();
                                         window.location.href = '/DocTypeIndex';
                                     }}
+                                >3.1.1- Visualizar</a>
+
+
+                                <a
+                                    href="#Adicionar"
+                                    className="sidebar-sub-item"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.location.href = '/DocTypeAdd';
+                                    }}
+                                >3.1.1- Adicionar</a>
+
+
+                                <a
+                                    href="#editar"
+                                    className="sidebar-sub-item"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        window.location.href = '/DocTypeEdit';
+                                    }}
                                 >
-                                    3.1.3- Visualizar
+                                    3.1.2- Editar
                                 </a>
+
+
+
+
                             </div>
                         )}
                     </div>

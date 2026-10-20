@@ -21,7 +21,7 @@ body {
     font-size: 24px;
     font-weight: 700;
     color: #1a252f;
-    margin-bottom: 20px;
+    margin-bottom: 0px;
     letter-spacing: -0.5px;
 }
 
@@ -55,7 +55,6 @@ body {
     text-align: left;
 }
 
-    /* Cabeçalho com degradê metalizado */
     .doc-table thead tr {
         background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
         color: #ffffff;
@@ -70,7 +69,6 @@ body {
         border-bottom: 2px solid #1a252f;
     }
 
-    /* Linhas com bordas escuras e espessas */
     .doc-table td {
         padding: 16px;
         font-size: 15px;
@@ -79,7 +77,6 @@ body {
         vertical-align: middle;
     }
 
-    /* Efeito hover suave nas linhas */
     .doc-table tbody tr:hover {
         background-color: #eaeded;
     }
@@ -166,3 +163,197 @@ body {
         background-color: #1a252f;
         border: 1px solid #415b76;
     }
+
+/* Título centralizado e espaçado */
+.edit-page-title {
+    text-align: center;
+    margin-top: 80px;
+    margin-bottom: 30px;
+}
+
+/* Aba metalizada de pesquisa */
+.search-metal-bar {
+    background: linear-gradient(180deg, #34495e 0%, #2c3e50 100%);
+    padding: 20px 16px;
+    border-bottom: 2px solid #1a252f;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.search-metal-label {
+    font-weight: 600;
+    color: #ffffff;
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    margin: 0;
+}
+
+
+.search-metal-input {
+    background-color: #ffffff !important;
+    border: 1px solid #1a252f !important;
+    padding: 16px 20px !important;
+    font-size: 18px !important;
+    flex: 1;
+    height: 15px !important;
+}
+
+/* Listagem e estados */
+.search-results-list {
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.search-status-pad {
+    padding: 16px;
+    text-align: center;
+}
+
+.search-status-center {
+    text-align: center;
+    padding: 16px;
+}
+
+.search-row-pointer {
+    cursor: pointer;
+}
+
+/* Modal sobreposto (Overlay) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.modal-card-content {
+    width: 100%;
+    width: 500px;
+    background-color: #ffffff;
+    padding: 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+    /* Trava o textarea dentro do modal de edição */
+    .modal-card-content textarea {
+        resize: none !important;
+    }
+
+.modal-title-spacing {
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.modal-group-margin {
+    margin-bottom: 16px;
+}
+
+.modal-group-margin-lg {
+    margin-bottom: 20px;
+}
+
+
+.modal-label-style {
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #1a252f !important;
+    letter-spacing: 0.8px !important;
+    margin-bottom: 8px !important;
+    text-align: left;
+}
+
+
+.modal-buttons-flex {
+    display: flex;
+    gap: 10px;
+}
+
+.modal-btn-cancel {
+    background-color: #7f8c8d;
+}
+
+.modal-message-style {
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+/* Padding específico para o card do formulário de adição */
+.form-card-padding {
+    padding: 30px;
+}
+
+.add-doc-card {
+    max-width: 650px !important;
+    margin: 0 auto;
+    padding: 40px !important;
+    background-color: #ffffff;
+    border: 4px double #1a252f !important;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+
+    .add-doc-card .form-group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+    }
+
+/* Trava o redimensionamento manual do textarea para evitar bugs visuais */
+.fixed-textarea {
+    resize: none;
+    width:300px;
+    height:70px;
+}
+
+/* Estilo imponente e metalizado para o botão de submit */
+.btn-submit {
+    background: linear-gradient(180deg, #34495e 0%, #1a252f 100%) !important;
+    color: #f4f6f8 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+    font-weight: 700 !important;
+    font-size: 18px !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    padding: 16px 32px !important;
+    width: 100% !important;
+    border: 2px solid #415b76 !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+
+    .btn-submit:hover {
+        background: linear-gradient(180deg, #415b76 0%, #2c3e50 100%) !important;
+        border-color: #ffffff !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25) !important;
+        transform: translateY(-1px);
+
+    }
+
+    .btn-submit:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+    }
+
+modal-card-content textarea {
+    resize: none !important;
+}
+
+.modal-card-content input[name="notes"],
+.modal-card-content .form-input {
+    width: 100% !important; /* Ou defina um valor fixo, ex: 400px */
+    height: 40px !important; /* Altura da caixa */
+}
