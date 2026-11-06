@@ -1,5 +1,5 @@
  import { useNavigate } from 'react-router-dom';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import './Brand.css';
 import Navbar from '../components/Navbar';
 import React from 'react';
@@ -15,15 +15,6 @@ export interface Brand {
     documentTypeID: number;
 }
 
-interface ApiResponse {
-    totalItems?: number;
-    page?: number;
-    pageSize?: number;
-    totalPages?: number;
-    data?: Brand[];
-    items?: Brand[];
-}
-
 export interface AddBrandDTO {
     brandName: string;
     brandNotes?: string;
@@ -32,14 +23,19 @@ export interface AddBrandDTO {
     brandDocumentTypeID: number;
 }
 
+export interface PagedResult<T> {
+    totalItens: number;
+    page: number;
+    pageSize: number;
+    dat: T[];
+
+}
+
 const API_BASE_URL = 'https://localhost:7035';
                   
 export function BrandIndex() {
     const [lista, setLista] = useState<Brand[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
-
-    // searchTermDebounced armazena o valor que de fato vai disparar a busca/efeito
-    const [searchTermDebounced, setSearchTermDebounced] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(true);
     const [erro, setErro] = useState<string | null>(null);
 
@@ -49,17 +45,7 @@ export function BrandIndex() {
     void setPageSize;
     const [totalPages, setTotalPages] = useState<number>(1);
 
-    // Efeito isolado para o Debounce do input de pesquisa
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setSearchTermDebounced(searchTerm);
-            setPageNumber(1); // Reseta para a primeira página ao buscar
-        }, 300);
-
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
-
-    // Efeito principal de busca na API de Marcas
+    // Efeito principal de busca na API de Marcas (idêntico ao do DocType)
     useEffect(() => {
         let isMounted = true;
 
@@ -73,8 +59,8 @@ export function BrandIndex() {
                     PageSize: pageSize.toString(),
                 });
 
-                if (searchTermDebounced.trim() !== '') {
-                    queryParams.append('SearchTerm', searchTermDebounced.trim());
+                if (searchTerm.trim() !== '') {
+                    queryParams.append('searchTerm', searchTerm.trim());
                 }
 
                 const res = await fetch(`${API_BASE_URL}/api/Marcas?${queryParams.toString()}`);
@@ -83,19 +69,21 @@ export function BrandIndex() {
                     throw new Error(`Erro ${res.status}: ${res.statusText}`);
                 }
 
-                const result: Brand[] | ApiResponse = await res.json();
+                const result = await res.json();
 
                 if (!isMounted) return;
 
                 if (Array.isArray(result)) {
-                    setLista(result);
+                    const ativos = result.filter((d: Brand) => !d.isdeleted);
+                    setLista(ativos);
                     setTotalPages(1);
-                } else if (result && Array.isArray(result.data)) {
-                    setLista(result.data);
-                    setTotalPages(result.totalPages || 1);
-                } else if (result && Array.isArray(result.items)) {
-                    setLista(result.items);
-                    setTotalPages(result.totalPages || 1);
+                } else if (result) {
+                    const dados = result.data || result.Data || [];
+                    const ativos = Array.isArray(dados)
+                        ? dados.filter((d: Brand) => !d.isdeleted)
+                        : [];
+                    setLista(ativos);
+                    setTotalPages(result.totalPages || result.TotalPages || 1);
                 } else {
                     setLista([]);
                 }
@@ -113,12 +101,66 @@ export function BrandIndex() {
         return () => {
             isMounted = false;
         };
-    }, [pageNumber, searchTermDebounced, pageSize]);
+    }, [pageNumber, pageSize, searchTerm]);
 
-    // Guardrail: Mantido o filtro client-side para itens deletados (Soft Delete)
-    const filteredLista = useMemo(() => {
-        return lista.filter((item) => !item.isdeleted);
-    }, [lista]);
+    // Reseta para a página 1 sempre que o usuário alterar o termo de busca
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setPageNumber(1);
+    };
+
+    const renderPageNumbers = () => {
+        const pages: (number | string)[] = [];
+
+        if (totalPages <= 20) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            const start = Math.max(2, pageNumber - 8);
+            const end = Math.min(totalPages - 1, pageNumber + 8);
+
+            if (start > 2) pages.push('...');
+
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+
+            if (end < totalPages - 1) pages.push('...');
+
+            pages.push(totalPages);
+        }
+
+        return pages.map((page, index) => {
+            if (page === '...') {
+                return (
+                    <span key={`dots-${index}`} style={{ padding: '0 4px', color: '#666', alignSelf: 'center' }}>
+                        ...
+                    </span>
+                );
+            }
+
+            return (
+                <button
+                    key={page}
+                    type="button"
+                    onClick={() => setPageNumber(Number(page))}
+                    style={{
+                        padding: '4px 8px',
+                        minWidth: '32px',
+                        fontSize: '13px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                        background: page === pageNumber ? '#1f3b5c' : '#fff',
+                        color: page === pageNumber ? '#fff' : '#333',
+                        cursor: 'pointer',
+                        fontWeight: page === pageNumber ? 'bold' : 'normal'
+                    }}
+                >
+                    {page}
+                </button>
+            );
+        });
+    };
 
     return (
         <div className="page-wrapper">
@@ -136,7 +178,7 @@ export function BrandIndex() {
                 )}
 
                 <div className="table-card">
-                    {/* Barra de pesquisa isolada */}
+                    {/* Barra de pesquisa idêntica à do DocType */}
                     <div className="search-metal-bar">
                         <label className="search-metal-label">
                             Pesquisar por Nome:
@@ -144,47 +186,88 @@ export function BrandIndex() {
                         <input
                             type="text"
                             maxLength={30}
-                            placeholder="Digite o nome da marca para filtrar (máx. 30 caracteres) "
+                            placeholder="Digite o nome para filtrar"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                             className="form-input search-metal-input"
                         />
                     </div>
 
                     {loading && <p className="status-text" style={{ padding: '20px', textAlign: 'center' }}>Carregando...</p>}
 
-                    {!loading && filteredLista.length === 0 && (
+                    {!loading && lista.length === 0 && (
                         <p className="status-text" style={{ padding: '20px', textAlign: 'center' }}>Nenhuma marca encontrada.</p>
                     )}
 
-                   {!loading && filteredLista.length > 0 && (<>
-   <table className="doc-table"><thead><tr>
-    <th>Nome</th>
-    <th>Endereço</th>
-    <th>Documento</th>
-    <th>Notas</th>
-    <th>Criado em:</th>
-</tr></thead><tbody>
-    {filteredLista.map((item) => (
-                <tr key={item.id}>
-                    <td className="name-cell">{item.name || '-'}</td>
-                    <td className="notes-cell">{item.adress || '-'}</td>
-                    <td className="notes-cell">{item.documentNumber || '-'}</td>
-                    <td className="notes-cell">{item.notes || '-'}</td>
-                    <td className="date-cell">
-                        {item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '-'}
-                    </td>
-                </tr>
-            ))}
-        </tbody>
-    </table>
-    {/* Controles de Paginação Server-Side */}
-    <div className="pagination-container">
-        <button type="button" className="btn-submit pagination-btn" disabled={pageNumber <= 1} onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))}>Anterior</button>
-        <span className="pagination-info">Pag {pageNumber} de {totalPages || 1}</span>
-        <button type="button" className="btn-submit pagination-btn" disabled={pageNumber >= totalPages} onClick={() => setPageNumber(prev => prev + 1)}>Proxima</button>
-    </div>
-</>)}</div></div></div>);
+                    {!loading && lista.length > 0 && (
+                        <>
+                            <table className="doc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Endereço</th>
+                                        <th>Documento</th>
+                                        <th>Notas</th>
+                                        <th>Criado em:</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {lista.map((item) => (
+                                        <tr key={item.id}>
+                                            <td className="name-cell">{item.name || '-'}</td>
+                                            <td className="notes-cell">{item.adress || '-'}</td>
+                                            <td className="notes-cell">{item.documentNumber || '-'}</td>
+                                            <td className="notes-cell">{item.notes || '-'}</td>
+                                            <td className="date-cell">
+                                                {item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '-'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {/* Controles de Paginação Server-Side com Botões de Páginas Específicas */}
+                            <div
+                                className="pagination-container"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '15px 20px',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    className="btn-submit pagination-btn"
+                                    disabled={pageNumber <= 1}
+                                    onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))}
+                                    style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', margin: 0 }}
+                                >
+                                    Anterior
+                                </button>
+
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '70%' }}>
+                                    {renderPageNumbers()}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="btn-submit pagination-btn"
+                                    disabled={pageNumber >= totalPages}
+                                    onClick={() => setPageNumber(prev => prev + 1)}
+                                    style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', margin: 0 }}
+                                >
+                                    Próxima
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 }
 
 export function BrandAdd() {
@@ -395,8 +478,325 @@ const [docTypes, setDocTypes] = useState<Array<{ id?: number; ID?: number; name?
 }
 
 
+export function BrandDelete() {
+    const [lista, setLista] = useState<Brand[]>([]);
+    const [searchTerm, setSearchTerm] = useState<string>('');
+    const [selectedBrand, setSelectedBrand] = useState<Brand | null>(null);
 
+    const [loadingList, setLoadingList] = useState<boolean>(false);
+    const [loadingDelete, setLoadingDelete] = useState<boolean>(false);
+    const [mensagem, setMensagem] = useState<string>('');
 
+    // Estados de Paginação Server-Side
+    const [pageNumber, setPageNumber] = useState<number>(1);
+    const [pageSize, setPageSize] = useState<number>(10);
+    void setPageSize;
+    const [totalPages, setTotalPages] = useState<number>(1);
+
+    // Efeito principal de busca na API de Marcas
+    useEffect(() => {
+        let isMounted = true;
+
+        async function fetchData() {
+            try {
+                setLoadingList(true);
+
+                const queryParams = new URLSearchParams({
+                    PageNumber: pageNumber.toString(),
+                    PageSize: pageSize.toString(),
+                });
+
+                if (searchTerm.trim() !== '') {
+                    queryParams.append('searchTerm', searchTerm.trim());
+                }
+
+                const res = await fetch(`${API_BASE_URL}/api/Marcas?${queryParams.toString()}`);
+
+                if (!res.ok) {
+                    throw new Error(`Erro ${res.status}: ${res.statusText}`);
+                }
+
+                const result = await res.json();
+
+                if (!isMounted) return;
+
+                if (Array.isArray(result)) {
+                    const ativos = result.filter((d: Brand) => !d.isdeleted);
+                    setLista(ativos);
+                    setTotalPages(1);
+                } else if (result) {
+                    const dados = result.data || result.Data || [];
+                    const ativos = Array.isArray(dados)
+                        ? dados.filter((d: Brand) => !d.isdeleted)
+                        : [];
+                    setLista(ativos);
+                    setTotalPages(result.totalPages || result.TotalPages || 1);
+                } else {
+                    setLista([]);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Erro ao carregar dados:', err);
+                }
+            } finally {
+                if (isMounted) setLoadingList(false);
+            }
+        }
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [pageNumber, pageSize, searchTerm]);
+
+    // Reseta para a página 1 sempre que o usuário alterar o termo de busca
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setPageNumber(1);
+    };
+
+    // Helper para gerar o range de páginas numeradas
+    const renderPageNumbers = () => {
+        const pages: (number | string)[] = [];
+
+        if (totalPages <= 20) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            const start = Math.max(2, pageNumber - 8);
+            const end = Math.min(totalPages - 1, pageNumber + 8);
+
+            if (start > 2) pages.push('...');
+
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+
+            if (end < totalPages - 1) pages.push('...');
+
+            pages.push(totalPages);
+        }
+
+        return pages.map((page, index) => {
+            if (page === '...') {
+                return (
+                    <span key={`dots-${index}`} style={{ padding: '0 4px', color: '#666', alignSelf: 'center' }}>
+                        ...
+                    </span>
+                );
+            }
+
+            return (
+                <button
+                    key={page}
+                    type="button"
+                    onClick={() => setPageNumber(Number(page))}
+                    style={{
+                        padding: '4px 8px',
+                        minWidth: '32px',
+                        fontSize: '13px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                        background: page === pageNumber ? '#1f3b5c' : '#fff',
+                        color: page === pageNumber ? '#fff' : '#333',
+                        cursor: 'pointer',
+                        fontWeight: page === pageNumber ? 'bold' : 'normal'
+                    }}
+                >
+                    {page}
+                </button>
+            );
+        });
+    };
+
+    // Função de Submissão do Soft Delete via [HttpDelete] com o ID na rota
+    const handleDeleteSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        if (!selectedBrand) return;
+
+        setLoadingDelete(true);
+        setMensagem('');
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/Marcas/${selectedBrand.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (response.ok) {
+                setLista(lista.filter((d) => d.id !== selectedBrand.id));
+                setMensagem(`Sucesso! Marca "${selectedBrand.name}" removida.`);
+
+                setTimeout(() => {
+                    setSelectedBrand(null);
+                    setMensagem('');
+                    setPageNumber(1);
+                }, 1500);
+            } else {
+                const errorText = await response.text();
+                setMensagem(`Erro ao deletar: ${errorText || response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Erro de rede:', error);
+            setMensagem('Não foi possível conectar ao servidor.');
+        } finally {
+            setLoadingDelete(false);
+        }
+    };
+
+    return (
+        <div className="page-wrapper">
+            <Navbar activePage="marcas" />
+
+            <div className="container">
+                <h2 className="title edit-page-title" style={{ textAlign: 'center', marginTop: '80px', marginBottom: '30px' }}>
+                    Excluir Marcas
+                </h2>
+
+                <div className="table-card">
+                    {/* Barra de pesquisa */}
+                    <div className="search-metal-bar">
+                        <label className="search-metal-label">
+                            Pesquisar por Nome:
+                        </label>
+                        <input
+                            type="text"
+                            maxLength={30}
+                            placeholder="Digite o nome para filtrar"
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            className="form-input search-metal-input"
+                        />
+                    </div>
+
+                    {loadingList && <p className="status-text" style={{ padding: '20px', textAlign: 'center' }}>Carregando...</p>}
+
+                    {!loadingList && lista.length === 0 && (
+                        <p className="status-text" style={{ padding: '20px', textAlign: 'center' }}>Nenhuma marca encontrada.</p>
+                    )}
+
+                    {!loadingList && lista.length > 0 && (
+                        <>
+                            <table className="doc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Endereço</th>
+                                        <th>Documento</th>
+                                        <th>Notas</th>
+                                        <th>Criado em:</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {lista.map((item) => (
+                                        <tr
+                                            key={item.id}
+                                            onClick={() => {
+                                                setSelectedBrand(item);
+                                                setMensagem('');
+                                            }}
+                                            className="search-row-pointer"
+                                        >
+                                            <td className="name-cell"><strong>{item.name || '-'}</strong></td>
+                                            <td className="notes-cell">{item.adress || '-'}</td>
+                                            <td className="notes-cell">{item.documentNumber || '-'}</td>
+                                            <td className="notes-cell">{item.notes || '-'}</td>
+                                            <td className="date-cell">
+                                                {item.createdAt ? new Date(item.createdAt).toLocaleDateString('pt-BR') : '-'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+
+                            {/* Controles de Paginação Server-Side */}
+                            <div
+                                className="pagination-container"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '15px 20px',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    className="btn-submit pagination-btn"
+                                    disabled={pageNumber <= 1}
+                                    onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))}
+                                    style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', margin: 0 }}
+                                >
+                                    Anterior
+                                </button>
+
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '70%' }}>
+                                    {renderPageNumbers()}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="btn-submit pagination-btn"
+                                    disabled={pageNumber >= totalPages}
+                                    onClick={() => setPageNumber(prev => prev + 1)}
+                                    style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', margin: 0 }}
+                                >
+                                    Próxima
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                {/* Modal de Confirmação de Soft Delete Sobreposto */}
+                {selectedBrand && (
+                    <div className="modal-overlay">
+                        <div className="table-card modal-card-content">
+                            <form onSubmit={handleDeleteSubmit}>
+                                <h3 className="title modal-title-spacing" style={{ color: '#d9534f' }}>
+                                    Desativar/Excluir: {selectedBrand.name}
+                                </h3>
+
+                                <p className="status-text modal-group-margin" style={{ marginBottom: '20px' }}>
+                                    Tem certeza que deseja realizar a exclusão desta marca?
+                                </p>
+
+                                <div className="modal-buttons-flex">
+                                    <button
+                                        type="submit"
+                                        disabled={loadingDelete}
+                                        className="btn-submit"
+                                        style={{ backgroundColor: '#d9534f', borderColor: '#d9534f' }}
+                                    >
+                                        {loadingDelete ? 'Excluindo...' : 'Confirmar Exclusão'}
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setSelectedBrand(null)}
+                                        className="btn-submit modal-btn-cancel"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </div>
+
+                                {mensagem && (
+                                    <p className="status-text modal-message-style">
+                                        {mensagem}
+                                    </p>
+                                )}
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
 export function BrandEdit() {
     const [brands, setBrands] = useState<Brand[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -411,61 +811,157 @@ export function BrandEdit() {
     const [loadingSave, setLoadingSave] = useState<boolean>(false);
     const [mensagem, setMensagem] = useState<string>('');
 
-    // 1. Função de Index baseada no DocTypeEdit que consome o [HttpGet] de Marcas
-    const fetchBrands = async () => {
-        setLoadingList(true);
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/Marcas?PageNumber=1&PageSize=50`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+    // Estados de Paginação Server-Side padronizados
+    const [pageNumber, setPageNumber] = useState<number>(1);
+    const [pageSize, setPageSize] = useState<number>(10);
+    void setPageSize;
+    const [totalPages, setTotalPages] = useState<number>(1);
 
-            if (response.ok) {
-                const result = await response.json();
-                const listaItens = result.items || result.data || result;
-                setBrands(Array.isArray(listaItens) ? listaItens : []);
-            } else {
-                console.error('Erro na resposta da API:', response.statusText);
+    // 1. Função principal de busca na API de Marcas com paginação e server-side search
+    useEffect(() => {
+        let isMounted = true;
+
+        async function fetchData() {
+            try {
+                setLoadingList(true);
+
+                const queryParams = new URLSearchParams({
+                    PageNumber: pageNumber.toString(),
+                    PageSize: pageSize.toString(),
+                });
+
+                if (searchTerm.trim() !== '') {
+                    queryParams.append('searchTerm', searchTerm.trim());
+                }
+
+                const res = await fetch(`${API_BASE_URL}/api/Marcas?${queryParams.toString()}`);
+
+                if (!res.ok) {
+                    throw new Error(`Erro ${res.status}: ${res.statusText}`);
+                }
+
+                const result = await res.json();
+
+                if (!isMounted) return;
+
+                if (Array.isArray(result)) {
+                    const ativos = result.filter((d: Brand) => !d.isdeleted);
+                    setBrands(ativos);
+                    setTotalPages(1);
+                } else if (result) {
+                    const listaItens = result.data || result.items || [];
+                    const ativos = Array.isArray(listaItens)
+                        ? listaItens.filter((d: Brand) => !d.isdeleted)
+                        : [];
+                    setBrands(ativos);
+                    setTotalPages(result.totalPages || result.TotalPages || 1);
+                } else {
+                    setBrands([]);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Erro ao carregar dados:', err);
+                }
+            } finally {
+                if (isMounted) setLoadingList(false);
             }
-        } catch (error) {
-            console.error('Erro no fetch:', error);
-        } finally {
-            setLoadingList(false);
         }
-    };
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [pageNumber, pageSize, searchTerm]);
 
     // Busca os tipos de documento para popular o dropdown de seleção
-    const fetchDocTypes = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/Novo-tipo-de-Documento?PageNumber=1&PageSize=50`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-            });
-            if (response.ok) {
-                const result = await response.json();
-                const listaItens = result.items || result.data || result;
-                setDocTypes(Array.isArray(listaItens) ? listaItens : []);
-            }
-        } catch (error) {
-            console.error('Erro ao carregar tipos de documento:', error);
-        }
-    };
-
     useEffect(() => {
-        queueMicrotask(() => {
-            fetchBrands();
-            fetchDocTypes();
-        });
+        let isMounted = true;
+
+        async function fetchDocTypes() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/Novo-tipo-de-Documento?PageNumber=1&PageSize=50`, {
+                    method: 'GET',
+                    headers: { 'Content-Type': 'application/json' },
+                });
+                if (response.ok && isMounted) {
+                    const result = await response.json();
+                    const listaItens = result.items || result.data || result;
+                    setDocTypes(Array.isArray(listaItens) ? listaItens : []);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar tipos de documento:', error);
+            }
+        }
+
+        fetchDocTypes();
+
+        return () => {
+            isMounted = false;
+        };
     }, []);
 
-    // 2. Filtra as marcas em tempo real na barra de buscas com base no nome (padrão DocTypeEdit)
-    const filteredBrands = brands.filter((brand) =>
-        brand.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Reseta para a página 1 sempre que o usuário alterar o termo de busca
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setPageNumber(1);
+    };
 
-    // Filtro seguro do dropdown de tipos de documento (lógica idêntica e validada do BrandAdd)
+    // Helper para gerar o range de páginas numeradas
+    const renderPageNumbers = () => {
+        const pages: (number | string)[] = [];
+
+        if (totalPages <= 20) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            const start = Math.max(2, pageNumber - 8);
+            const end = Math.min(totalPages - 1, pageNumber + 8);
+
+            if (start > 2) pages.push('...');
+
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+
+            if (end < totalPages - 1) pages.push('...');
+
+            pages.push(totalPages);
+        }
+
+        return pages.map((page, index) => {
+            if (page === '...') {
+                return (
+                    <span key={`dots-${index}`} style={{ padding: '0 4px', color: '#666', alignSelf: 'center' }}>
+                        ...
+                    </span>
+                );
+            }
+
+            return (
+                <button
+                    key={page}
+                    type="button"
+                    onClick={() => setPageNumber(Number(page))}
+                    style={{
+                        padding: '4px 8px',
+                        minWidth: '32px',
+                        fontSize: '13px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                        background: page === pageNumber ? '#1f3b5c' : '#fff',
+                        color: page === pageNumber ? '#fff' : '#333',
+                        cursor: 'pointer',
+                        fontWeight: page === pageNumber ? 'bold' : 'normal'
+                    }}
+                >
+                    {page}
+                </button>
+            );
+        });
+    };
+
+    // Filtro seguro do dropdown de tipos de documento
     const filteredDocTypes = docTypes.filter((dt) => {
         const currentId = dt.id ?? dt.ID ?? 0;
         const currentName = dt.name ?? '';
@@ -475,7 +971,7 @@ export function BrandEdit() {
         );
     });
 
-    // Manipulador para alterar os campos do formulário de edição (padrão DocTypeEdit)
+    // Manipulador para alterar os campos do formulário de edição
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         if (!selectedBrand) return;
         const { name, value } = e.target;
@@ -485,10 +981,17 @@ export function BrandEdit() {
         });
     };
 
-    // 3. Função de Submit para atualizar via [HttpPut] enviando o objeto Brand esperado pelo BrandControllers
+    // 3. Função de Submit para atualizar via [HttpPut]
     const handleUpdateSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!selectedBrand) return;
+
+        // VALIDAÇÃO: Garante que o ID digitado/selecionado realmente existe nos tipos de documento carregados
+        const isValidDocType = docTypes.some(dt => (dt.id ?? dt.ID ?? 0) === Number(selectedBrand.documentTypeID));
+        if (!isValidDocType) {
+            setMensagem('Erro: Selecione um Tipo de Documento válido a partir da lista de busca.');
+            return;
+        }
 
         setLoadingSave(true);
         setMensagem('');
@@ -506,6 +1009,10 @@ export function BrandEdit() {
                 const updated: Brand = await response.json();
                 setMensagem(`Sucesso! Marca "${updated.name}" atualizada.`);
                 setBrands(brands.map((b) => (b.id === updated.id ? updated : b)));
+                setTimeout(() => {
+                    setSelectedBrand(null);
+                    setMensagem('');
+                }, 1500);
             } else {
                 const errorText = await response.text();
                 setMensagem(`Erro ao atualizar: ${errorText || response.statusText}`);
@@ -517,18 +1024,17 @@ export function BrandEdit() {
             setLoadingSave(false);
         }
     };
-
     return (
         <div className="page-wrapper">
             <Navbar activePage="marcas" />
 
             <div className="container">
-                <h2 className="title edit-page-title">
+                <h2 className="title edit-page-title" style={{ textAlign: 'center', marginTop: '80px', marginBottom: '30px' }}>
                     Editar Marcas
                 </h2>
 
                 <div className="table-card">
-                    {/* Aba metalizada de pesquisa */}
+                    {/* Barra de pesquisa */}
                     <div className="search-metal-bar">
                         <label className="search-metal-label">
                             Pesquisar por Nome:
@@ -538,25 +1044,36 @@ export function BrandEdit() {
                             maxLength={30}
                             placeholder="Digite o nome da marca para filtrar"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                             className="form-input search-metal-input"
                         />
                     </div>
 
-                    {/* Lista resultante da busca */}
-                    <div className="search-results-list">
-                        {loadingList ? (
-                            <p className="status-text search-status-pad">Carregando lista...</p>
-                        ) : filteredBrands.length > 0 ? (
+                    {loadingList && <p className="status-text" style={{ padding: '20px', textAlign: 'center' }}>Carregando...</p>}
+
+                    {!loadingList && brands.length === 0 && (
+                        <p className="status-text" style={{ padding: '20px', textAlign: 'center' }}>Nenhuma marca encontrada.</p>
+                    )}
+
+                    {!loadingList && brands.length > 0 && (
+                        <>
                             <table className="doc-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>Endereço</th>
+                                        <th>Documento</th>
+                                        <th>Notas</th>
+                                        <th>Criado em:</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
-                                    {filteredBrands.map((brand) => (
+                                    {brands.map((brand) => (
                                         <tr
                                             key={brand.id}
                                             onClick={() => {
                                                 setSelectedBrand(brand);
                                                 setMensagem('');
-                                                // Preenche o campo de busca do dropdown com o ID atual da marca selecionada de forma segura
                                                 const foundDt = docTypes.find(d => (d.id ?? d.ID ?? 0) === brand.documentTypeID);
                                                 const foundName = foundDt?.name ?? '';
                                                 setDocTypeSearch(foundName ? `ID: ${brand.documentTypeID} - ${foundName}` : brand.documentTypeID ? `ID: ${brand.documentTypeID}` : '');
@@ -564,18 +1081,58 @@ export function BrandEdit() {
                                             className="search-row-pointer"
                                         >
                                             <td className="name-cell"><strong>{brand.name}</strong></td>
-                                            <td className="notes-cell">{brand.notes || 'Sem notas'}</td>
+                                            <td className="notes-cell">{brand.adress || '-'}</td>
+                                            <td className="notes-cell">{brand.documentNumber || '-'}</td>
+                                            <td className="notes-cell">{brand.notes || '-'}</td>
+                                            <td className="date-cell">
+                                                {brand.createdAt ? new Date(brand.createdAt).toLocaleDateString('pt-BR') : '-'}
+                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                        ) : (
-                            <p className="status-text search-status-center">Nenhuma marca encontrada.</p>
-                        )}
-                    </div>
+
+                            {/* Controles de Paginação Server-Side */}
+                            <div
+                                className="pagination-container"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '15px 20px',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    className="btn-submit pagination-btn"
+                                    disabled={pageNumber <= 1}
+                                    onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))}
+                                    style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', margin: 0 }}
+                                >
+                                    Anterior
+                                </button>
+
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '70%' }}>
+                                    {renderPageNumbers()}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="btn-submit pagination-btn"
+                                    disabled={pageNumber >= totalPages}
+                                    onClick={() => setPageNumber(prev => prev + 1)}
+                                    style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', margin: 0 }}
+                                >
+                                    Próxima
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
 
-                {/* Modal de Edição Sobreposto com Fundo Escurecido */}
+                {/* Modal de Edição Sobreposto */}
                 {selectedBrand && (
                     <div className="modal-overlay">
                         <div className="table-card modal-card-content">
@@ -629,12 +1186,10 @@ export function BrandEdit() {
                                     />
                                 </div>
 
-                                {/* Campo interativo com Dropdown de Tipos de Documento (Lógica de busca do BrandAdd) */}
                                 <div className="form-group modal-group-margin" style={{ position: 'relative' }}>
                                     <label className="modal-label-style">
                                         Tipo de Documento:
                                     </label>
-                                    
                                     <input
                                         type="text"
                                         placeholder="Digite para buscar pelo ID ou Nome..."
@@ -650,7 +1205,7 @@ export function BrandEdit() {
                                     <input
                                         type="hidden"
                                         name="documentTypeID"
-                                        value={selectedBrand.documentTypeID}
+                                        value={selectedBrand.documentTypeID ?? ''}
                                         required
                                     />
 
@@ -660,13 +1215,14 @@ export function BrandEdit() {
                                             top: '100%',
                                             left: 0,
                                             right: 0,
-                                            zIndex: 99,
+                                            zIndex: 9999,
                                             background: '#fff',
                                             border: '1px solid #ccc',
                                             borderRadius: '4px',
                                             maxHeight: '160px',
                                             overflowY: 'auto',
-                                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)'
+                                            boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
+                                            marginTop: '2px'
                                         }}>
                                             {filteredDocTypes.map((dt) => {
                                                 const currentId = dt.id ?? dt.ID ?? 0;
@@ -674,6 +1230,7 @@ export function BrandEdit() {
                                                 return (
                                                     <div
                                                         key={currentId}
+                                                        onMouseDown={(e) => e.preventDefault()} // Evita que o blur feche antes do clique
                                                         onClick={() => {
                                                             setSelectedBrand({
                                                                 ...selectedBrand,
@@ -687,7 +1244,8 @@ export function BrandEdit() {
                                                             cursor: 'pointer',
                                                             borderBottom: '1px solid #eee',
                                                             fontSize: '14px',
-                                                            color: '#333'
+                                                            color: '#333',
+                                                            backgroundColor: '#fff'
                                                         }}
                                                         onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
                                                         onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}

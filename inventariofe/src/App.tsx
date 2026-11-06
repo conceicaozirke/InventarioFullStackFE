@@ -1,7 +1,7 @@
 ﻿import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar'; // Mantém o seu import original
 import { DocTypeIndex, DocTypeAdd, DocTypeEdit, DocTypeDelete } from './pages/DocType';
-import {BrandIndex, BrandAdd, BrandEdit} from './pages/Brand';
+import { BrandIndex, BrandAdd, BrandEdit, BrandDelete } from './pages/Brand';
 
 import './App.css';
 
@@ -19,6 +19,7 @@ export function App() {
                         <Route path= "/BrandIndex" element={<BrandIndex/>} />
                         <Route path= "/BrandAdd" element={<BrandAdd/>} />
                         <Route path= "/BrandEdit" element={<BrandEdit/>} />
+                        <Route path= "/BrandDelete" element={<BrandDelete/>} />
                         <Route path="/" element={
                             <div className="container">
                                 <h1 className="title">Início – Inventário Web</h1>
@@ -32,51 +33,5 @@ export function App() {
     );
 }
 export default App;
-
-
-
-
-/*export function App() {
-    const [currentPath, setCurrentPath] = useState(window.location.pathname);
-
-    useEffect(() => {
-        const handleLocationChange = () => {
-            setCurrentPath(window.location.pathname);
-        };
-
-        window.addEventListener('popstate', handleLocationChange);
-        return () => window.removeEventListener('popstate', handleLocationChange);
-    }, []);
-
-    const renderCurrentPage = () => {
-        switch (currentPath) {
-            case '/DocTypeAdd':
-                return <DocTypeAdd />;
-            case '/DocTypeIndex':
-                return <DocTypeIndex />;
-            case '/DocTypeEdit':
-                return <DocTypeEdit />;
-            case '/':
-            default:
-                return (
-                    <div className="container">
-                        <h1 className="title">Início – Inventário Web</h1>
-                        <p className="status-text">Bem-vindo à página inicial exclusiva!</p>
-                    </div>
-                );
-        }
-    };
-
-    return (
-        <div className="page-wrapper">
-            <Navbar />
-            <main className="content">
-                {renderCurrentPage()}
-            </main>
-        </div>
-    );
-}
-
-export default App; */
 
                  

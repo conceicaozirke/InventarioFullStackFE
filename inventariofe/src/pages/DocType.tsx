@@ -650,6 +650,7 @@ export function DocTypeDelete() {
 }
 
 
+
 export function DocTypeEdit() {
     const [documents, setDocuments] = useState<DocumentType[]>([]);
     const [searchTerm, setSearchTerm] = useState<string>('');
@@ -659,49 +660,128 @@ export function DocTypeEdit() {
     const [loadingSave, setLoadingSave] = useState<boolean>(false);
     const [mensagem, setMensagem] = useState<string>('');
 
-    // 1. Função de Index que consome o [HttpGet] com paginação
-    const fetchDocuments = async () => {
-        setLoadingList(true);
-        try {
+    // Estados de Paginação Server-Side
+    const [pageNumber, setPageNumber] = useState<number>(1);
+    const [pageSize, setPageSize] = useState<number>(10);
+    void setPageSize;
+    const [totalPages, setTotalPages] = useState<number>(1);
 
+    // Efeito principal de busca na API idêntico ao do Index (com fetchData dentro e isMounted)
+    useEffect(() => {
+        let isMounted = true;
 
-            const response = await fetch(`${API_BASE_URL}/api/Novo-tipo-de-Documento?PageNumber=1&PageSize=50`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+        async function fetchData() {
+            try {
+                setLoadingList(true);
 
-            if (response.ok) {
-                const result = await response.json();
+                const queryParams = new URLSearchParams({
+                    PageNumber: pageNumber.toString(),
+                    PageSize: pageSize.toString(),
+                });
 
-                
+                if (searchTerm.trim() !== '') {
+                    queryParams.append('SearchTerm', searchTerm.trim());
+                }
 
-                const listaItens = result.items || result.data || result;
+                const res = await fetch(`${API_BASE_URL}/api/Novo-tipo-de-Documento?${queryParams.toString()}`);
 
-                setDocuments(Array.isArray(listaItens) ? listaItens : []);
-            } else {
-                console.error('Erro na resposta da API:', response.statusText);
+                if (!res.ok) {
+                    throw new Error(`Erro ${res.status}: ${res.statusText}`);
+                }
+
+                const result = await res.json();
+
+                if (!isMounted) return;
+
+                if (Array.isArray(result)) {
+                    const ativos = result.filter((d: DocumentType) => !d.Isdeleted);
+                    setDocuments(ativos);
+                    setTotalPages(1);
+                } else if (result) {
+                    const listaItens = result.data || [];
+                    const ativos = Array.isArray(listaItens)
+                        ? listaItens.filter((d: DocumentType) => !d.Isdeleted)
+                        : [];
+                    setDocuments(ativos);
+                    setTotalPages(result.totalPages || 1);
+                } else {
+                    setDocuments([]);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    console.error('Erro ao carregar dados:', err);
+                }
+            } finally {
+                if (isMounted) setLoadingList(false);
             }
-        } catch (error) {
-            console.error('Erro no fetch:', error);
-        } finally {
-            setLoadingList(false);
         }
+
+        fetchData();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [pageNumber, pageSize, searchTerm]);
+
+    // Reseta para a página 1 sempre que o usuário alterar o termo de busca
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchTerm(e.target.value);
+        setPageNumber(1);
     };
 
+    // Helper para gerar o range de páginas numeradas (idêntico ao Index)
+    const renderPageNumbers = () => {
+        const pages: (number | string)[] = [];
 
-    useEffect(() => {
-        queueMicrotask(() => {
-            fetchDocuments();
+        if (totalPages <= 20) {
+            for (let i = 1; i <= totalPages; i++) pages.push(i);
+        } else {
+            pages.push(1);
+            const start = Math.max(2, pageNumber - 8);
+            const end = Math.min(totalPages - 1, pageNumber + 8);
+
+            if (start > 2) pages.push('...');
+
+            for (let i = start; i <= end; i++) {
+                pages.push(i);
+            }
+
+            if (end < totalPages - 1) pages.push('...');
+
+            pages.push(totalPages);
+        }
+
+        return pages.map((page, index) => {
+            if (page === '...') {
+                return (
+                    <span key={`dots-${index}`} style={{ padding: '0 4px', color: '#666', alignSelf: 'center' }}>
+                        ...
+                    </span>
+                );
+            }
+
+            return (
+                <button
+                    key={page}
+                    type="button"
+                    onClick={() => setPageNumber(Number(page))}
+                    style={{
+                        padding: '4px 8px',
+                        minWidth: '32px',
+                        fontSize: '13px',
+                        borderRadius: '4px',
+                        border: '1px solid #ccc',
+                        background: page === pageNumber ? '#1f3b5c' : '#fff',
+                        color: page === pageNumber ? '#fff' : '#333',
+                        cursor: 'pointer',
+                        fontWeight: page === pageNumber ? 'bold' : 'normal'
+                    }}
+                >
+                    {page}
+                </button>
+            );
         });
-    }, []);
-
-
-    // 2. Filtra os documentos em tempo real na barra de buscas com base no nome
-    const filteredDocuments = documents.filter((doc) =>
-        doc.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    };
 
     // Manipulador para alterar os campos do formulário de edição
     const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -733,7 +813,7 @@ export function DocTypeEdit() {
             if (response.ok) {
                 const updated: DocumentType = await response.json();
                 setDocuments(documents.map((d) => (d.id === updated.id ? updated : d)));
-                setSelectedDoc(null); // <-- Fecha o modal e retorna à listagem principal
+                setSelectedDoc(null);
             } else {
                 const errorText = await response.text();
                 setMensagem(`Erro ao atualizar: ${errorText || response.statusText}`);
@@ -745,6 +825,7 @@ export function DocTypeEdit() {
             setLoadingSave(false);
         }
     };
+
     return (
         <div className="page-wrapper">
             <Navbar activePage="documentos" />
@@ -755,7 +836,7 @@ export function DocTypeEdit() {
                 </h2>
 
                 <div className="table-card">
-                    {/* Aba metalizada de pesquisa */}
+                    {/* Barra de pesquisa idêntica à do Delete */}
                     <div className="search-metal-bar">
                         <label className="search-metal-label">
                             Pesquisar por Nome:
@@ -765,19 +846,22 @@ export function DocTypeEdit() {
                             maxLength={30}
                             placeholder="Digite o nome do tipo de documento para filtrar"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                             className="form-input search-metal-input"
                         />
                     </div>
 
-                    {/* Lista resultante da busca */}
-                    <div className="search-results-list">
-                        {loadingList ? (
-                            <p className="status-text search-status-pad">Carregando lista...</p>
-                        ) : filteredDocuments.length > 0 ? (
+                    {loadingList && <p className="status-text" style={{ padding: '20px', textAlign: 'center' }}>Carregando...</p>}
+
+                    {!loadingList && documents.length === 0 && (
+                        <p className="status-text" style={{ padding: '20px', textAlign: 'center' }}>Nenhum documento encontrado.</p>
+                    )}
+
+                    {!loadingList && documents.length > 0 && (
+                        <>
                             <table className="doc-table">
                                 <tbody>
-                                    {filteredDocuments.map((doc) => (
+                                    {documents.map((doc) => (
                                         <tr
                                             key={doc.id}
                                             onClick={() => {
@@ -792,45 +876,76 @@ export function DocTypeEdit() {
                                     ))}
                                 </tbody>
                             </table>
-                        ) : (
-                            <p className="status-text search-status-center">Nenhum documento encontrado.</p>
-                        )}
-                    </div>
+
+                            {/* Controles de Paginação Server-Side idênticos ao do Delete */}
+                            <div
+                                className="pagination-container"
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '15px 20px',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    className="btn-submit pagination-btn"
+                                    disabled={pageNumber <= 1}
+                                    onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))}
+                                    style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', margin: 0 }}
+                                >
+                                    Anterior
+                                </button>
+
+                                <div style={{ display: 'flex', gap: '4px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', maxWidth: '70%' }}>
+                                    {renderPageNumbers()}
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="btn-submit pagination-btn"
+                                    disabled={pageNumber >= totalPages}
+                                    onClick={() => setPageNumber(prev => prev + 1)}
+                                    style={{ width: 'auto', padding: '6px 14px', fontSize: '13px', margin: 0 }}
+                                >
+                                    Próxima
+                                </button>
+                            </div>
+                        </>
+                    )}
                 </div>
 
-                {/* Modal de Edição Sobreposto com Fundo Escurecido */}
+                {/* Modal de Edição Sobreposto (Mantido Intocado) */}
                 {selectedDoc && (
                     <div className="modal-overlay">
                         <div className="table-card modal-card-content">
                             <form onSubmit={handleUpdateSubmit}>
                                 <h3 className="title modal-title-spacing">
-                                    Editando: {selectedDoc.name}
+                                    Editar Documento: {selectedDoc.name}
                                 </h3>
 
                                 <div className="form-group modal-group-margin">
-                                    <label className="modal-label-style">
-                                        Nome:
-                                    </label>
+                                    <label className="form-label">Nome:</label>
                                     <input
                                         type="text"
                                         name="name"
                                         value={selectedDoc.name}
                                         onChange={handleFormChange}
-                                        maxLength={30}
-                                        required
+                                        maxLength={50}
                                         className="form-input"
+                                        required
                                     />
                                 </div>
 
-                                <div className="form-group modal-group-margin-lg">
-                                    <label className="modal-label-style">
-                                        Notas:
-                                    </label>
-                                    <input
+                                <div className="form-group modal-group-margin">
+                                    <label className="form-label">Notas:</label>
+                                    <textarea
                                         name="notes"
                                         value={selectedDoc.notes || ''}
                                         onChange={handleFormChange}
-                                        maxLength= {150 }
+                                        maxLength={255}
                                         className="form-input"
                                     />
                                 </div>
@@ -841,7 +956,7 @@ export function DocTypeEdit() {
                                         disabled={loadingSave}
                                         className="btn-submit"
                                     >
-                                        {loadingSave ? 'Salvando...' : 'Salvar '}
+                                        {loadingSave ? 'Salvando...' : 'Salvar Alterações'}
                                     </button>
 
                                     <button

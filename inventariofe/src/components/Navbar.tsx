@@ -95,7 +95,7 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                                     to="/DocTypeDelete"
                                     className="sidebar-sub-item"
                                 >
-                                    3.1.4- Deletar
+                                    3.1.4- Remover
                                 </Link>
 
                             </div>
@@ -117,15 +117,20 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                         </button>
                         {openMenus['marcas'] && (
                             <div className="sidebar-submenu">
+                                <Link to="/BrandIndex" className="sidebar-sub-item">
+                                    3.2.1- Visualizar
+                                </Link>
                                 <Link to="/BrandAdd" className="sidebar-sub-item">
-                                    3.2.1- Adicionar
+                                    3.2.2- Adicionar
                                 </Link>
                                 <Link to="/BrandEdit" className="sidebar-sub-item">
-                                    3.2.2- Editar/Remover
+                                    3.2.3- Editar
                                 </Link>
-                                <Link to="/BrandIndex" className="sidebar-sub-item">
-                                    3.2.3- Visualizar
+                               
+                                <Link to="/BrandDelete" className="sidebar-sub-item">
+                                    3.2.4- Remover
                                 </Link>
+                               
                             </div>
                         )}
                     </div>
