@@ -1,1 +1,2 @@
 C:\Users\PC004\Desktop\Fullstack- projeto 2- Thiago\InventarioFE\InventarioFE\obj\Debug\inventariofe.esproj.CoreCompileInputs.cache
+C:\Users\thiag\OneDrive\Área de Trabalho\Projeto Inventario Full Stack\FE\InventarioFullStackFE\InventarioFE\obj\Debug\inventariofe.esproj.CoreCompileInputs.cache

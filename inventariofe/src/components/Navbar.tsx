@@ -1,4 +1,5 @@
 ﻿import { useState } from 'react';
+import { Link } from 'react-router-dom'; 
 import './Navbar.css';
 
 interface NavbarProps {
@@ -10,6 +11,9 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
     const [openMenus, setOpenMenus] = useState<{ [key: string]: boolean }>({
         documentos: true
     });
+    void activePage;
+    void onSelect;
+
 
     // Estado exclusivo para controlar o menu flutuante (gaveta)
     const [isOpen, setIsOpen] = useState(false);
@@ -48,7 +52,11 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                 <div className="sidebar-section-title">Menu Principal</div>
 
                 <nav className="sidebar-nav">
-                    {/* 3.1 - Tipos de documentos */}
+                  
+                
+                
+                
+                {/* 3.1 - Tipos de documentos */}
                     <div className="sidebar-dropdown">
                         <button
                             className={`sidebar-menu-item ${openMenus['documentos'] ? 'open' : ''}`}
@@ -59,48 +67,46 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                         </button>
 
                         {openMenus['documentos'] && (
+                     <div className="sidebar-submenu">
 
-                            <div className="sidebar-submenu">
-
-                                <a
-                                    href="#visualizar"
+                                <Link
+                                    to="/DocTypeIndex"
                                     className="sidebar-sub-item"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        window.location.href = '/DocTypeIndex';
-                                    }}
-                                >3.1.1- Visualizar</a>
-
-
-                                <a
-                                    href="#Adicionar"
-                                    className="sidebar-sub-item"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        window.location.href = '/DocTypeAdd';
-                                    }}
-                                >3.1.1- Adicionar</a>
-
-
-                                <a
-                                    href="#editar"
-                                    className="sidebar-sub-item"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        window.location.href = '/DocTypeEdit';
-                                    }}
                                 >
-                                    3.1.2- Editar
-                                </a>
+                                    3.1.1- Visualizar
+                                </Link>
 
+                                <Link
+                                    to="/DocTypeAdd"
+                                    className="sidebar-sub-item"
+                                >
+                                    3.1.2- Adicionar
+                                </Link>
 
-
+                                <Link
+                                    to="/DocTypeEdit"
+                                    className="sidebar-sub-item"
+                                >
+                                    3.1.3- Editar
+                                </Link>
+                                
+                                
+                                <Link
+                                    to="/DocTypeDelete"
+                                    className="sidebar-sub-item"
+                                >
+                                    3.1.4- Deletar
+                                </Link>
 
                             </div>
                         )}
-                    </div>
 
-                    {/* 3.2 - Marcas */}
+                            </div>
+                    
+                            
+                            
+                            
+                            {/* 3.2 - Marcas */}
                     <div className="sidebar-dropdown">
                         <button
                             className={`sidebar-menu-item ${openMenus['marcas'] ? 'open' : ''}`}
@@ -111,14 +117,22 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                         </button>
                         {openMenus['marcas'] && (
                             <div className="sidebar-submenu">
-                                <a href="insira link aqui" className="sidebar-sub-item">3.2.1- Adicionar</a>
-                                <a href="insira link aqui" className="sidebar-sub-item">3.2.2- Editar/Remover</a>
-                                <a href="insira link aqui" className="sidebar-sub-item">3.2.3- Visualizar</a>
+                                <Link to="/BrandAdd" className="sidebar-sub-item">
+                                    3.2.1- Adicionar
+                                </Link>
+                                <Link to="/BrandEdit" className="sidebar-sub-item">
+                                    3.2.2- Editar/Remover
+                                </Link>
+                                <Link to="/BrandIndex" className="sidebar-sub-item">
+                                    3.2.3- Visualizar
+                                </Link>
                             </div>
                         )}
                     </div>
 
-                    {/* 3.3 - Nota Fiscal de Aquisição */}
+                   
+                    
+                                        {/* 3.3 - Nota Fiscal de Aquisição */}
                     <div className="sidebar-dropdown">
                         <button
                             className={`sidebar-menu-item ${openMenus['nf'] ? 'open' : ''}`}
@@ -129,12 +143,13 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                         </button>
                         {openMenus['nf'] && (
                             <div className="sidebar-submenu">
-                                <a href="insira link aqui" className="sidebar-sub-item">3.3.1- Adicionar</a>
-                                <a href="insira link aqui" className="sidebar-sub-item">3.3.2- Editar/Remover</a>
-                                <a href="insira link aqui" className="sidebar-sub-item">3.3.3- Visualizar</a>
+                                <Link to="/NfAdd" className="sidebar-sub-item">3.3.1- Adicionar</Link>
+                                <Link to="/NfEdit" className="sidebar-sub-item">3.3.2- Editar/Remover</Link>
+                                <Link to="/NfIndex" className="sidebar-sub-item">3.3.3- Visualizar</Link>
                             </div>
                         )}
                     </div>
+
 
                     {/* 3.4 - Produtos */}
                     <div className="sidebar-dropdown">
@@ -147,11 +162,13 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                         </button>
                         {openMenus['produtos'] && (
                             <div className="sidebar-submenu">
-                                <a href="insira link aqui" className="sidebar-sub-item">3.4.1- Adicionar</a>
-                                <a href="insira link aqui" className="sidebar-sub-item">3.4.2- Editar/Remover</a>
-                                <a href="insira link aqui" className="sidebar-sub-item">3.4.3- Visualizar</a>
+                                <Link to="/ProductAdd" className="sidebar-sub-item">3.4.1- Adicionar</Link>
+                                <Link to="/ProductEdit" className="sidebar-sub-item">3.4.2- Editar/Remover</Link>
+                                <Link to="/ProductIndex" className="sidebar-sub-item">3.4.3- Visualizar</Link>
                             </div>
                         )}
+                    
+                    
                     </div>
                 </nav>
             </aside>
