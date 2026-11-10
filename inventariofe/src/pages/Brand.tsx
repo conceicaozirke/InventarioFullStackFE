@@ -981,7 +981,6 @@ export function BrandEdit() {
         });
     };
 
-    // 3. Função de Submit para atualizar via [HttpPut]
     const handleUpdateSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!selectedBrand) return;
@@ -989,9 +988,10 @@ export function BrandEdit() {
         // VALIDAÇÃO: Garante que o ID digitado/selecionado realmente existe nos tipos de documento carregados
         const isValidDocType = docTypes.some(dt => (dt.id ?? dt.ID ?? 0) === Number(selectedBrand.documentTypeID));
         if (!isValidDocType) {
-            setMensagem('Erro: Selecione um Tipo de Documento válido a partir da lista de busca.');
+            setMensagem('Digite um ID válido');
             return;
         }
+
 
         setLoadingSave(true);
         setMensagem('');
@@ -1004,6 +1004,7 @@ export function BrandEdit() {
                 },
                 body: JSON.stringify(selectedBrand),
             });
+
 
             if (response.ok) {
                 const updated: Brand = await response.json();

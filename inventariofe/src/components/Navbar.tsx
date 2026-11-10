@@ -62,49 +62,22 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                             className={`sidebar-menu-item ${openMenus['documentos'] ? 'open' : ''}`}
                             onClick={() => toggleMenu('documentos')}
                         >
-                            <span>Tipos de documentos</span>
+                            <span> Tipos de documentos</span>
                             <span className="arrow">{openMenus['documentos'] ? '▼' : '▶'}</span>
                         </button>
 
                         {openMenus['documentos'] && (
                      <div className="sidebar-submenu">
-
-                                <Link
-                                    to="/DocTypeIndex"
-                                    className="sidebar-sub-item"
-                                >
-                                    3.1.1- Visualizar
-                                </Link>
-
-                                <Link
-                                    to="/DocTypeAdd"
-                                    className="sidebar-sub-item"
-                                >
-                                    3.1.2- Adicionar
-                                </Link>
-
-                                <Link
-                                    to="/DocTypeEdit"
-                                    className="sidebar-sub-item"
-                                >
-                                    3.1.3- Editar
-                                </Link>
-                                
-                                
-                                <Link
-                                    to="/DocTypeDelete"
-                                    className="sidebar-sub-item"
-                                >
-                                    3.1.4- Remover
-                                </Link>
-
-                            </div>
+                       <Link  to="/DocTypeIndex"  className="sidebar-sub-item"  > Visualizar </Link>
+                               <Link to="/DocTypeAdd"className="sidebar-sub-item"> Adicionar </Link>
+                                <Link to="/DocTypeEdit" className="sidebar-sub-item">  Editar</Link>
+                                <Link to="/DocTypeDelete" className="sidebar-sub-item" > Remover  </Link>
+                            </div
+                            >
                         )}
-
-                            </div>
+                      </div>
                     
-                            
-                            
+                        
                             
                             {/* 3.2 - Marcas */}
                     <div className="sidebar-dropdown">
@@ -117,19 +90,10 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                         </button>
                         {openMenus['marcas'] && (
                             <div className="sidebar-submenu">
-                                <Link to="/BrandIndex" className="sidebar-sub-item">
-                                    3.2.1- Visualizar
-                                </Link>
-                                <Link to="/BrandAdd" className="sidebar-sub-item">
-                                    3.2.2- Adicionar
-                                </Link>
-                                <Link to="/BrandEdit" className="sidebar-sub-item">
-                                    3.2.3- Editar
-                                </Link>
-                               
-                                <Link to="/BrandDelete" className="sidebar-sub-item">
-                                    3.2.4- Remover
-                                </Link>
+                                <Link to="/BrandIndex" className="sidebar-sub-item"> Visualizar  </Link>
+                                <Link to="/BrandAdd" className="sidebar-sub-item"> Adicionar </Link>
+                                <Link to="/BrandEdit" className="sidebar-sub-item">  Editar  </Link>
+                               <Link to="/BrandDelete" className="sidebar-sub-item">  Remover  </Link>
                                
                             </div>
                         )}
@@ -140,17 +104,18 @@ export function Navbar({ activePage = 'documentos', onSelect }: NavbarProps) {
                                         {/* 3.3 - Nota Fiscal de Aquisição */}
                     <div className="sidebar-dropdown">
                         <button
-                            className={`sidebar-menu-item ${openMenus['nf'] ? 'open' : ''}`}
-                            onClick={() => toggleMenu('nf')}
+                            className={`sidebar-menu-item ${openMenus['InvoicePurchase'] ? 'open' : ''}`}
+                            onClick={() => toggleMenu('InvoicePurchase')}
                         >
                             <span>Nota Fiscal de Aquisição</span>
                             <span className="arrow">{openMenus['nf'] ? '▼' : '▶'}</span>
                         </button>
-                        {openMenus['nf'] && (
+                        {openMenus['InvoicePurchase'] && (
                             <div className="sidebar-submenu">
-                                <Link to="/NfAdd" className="sidebar-sub-item">3.3.1- Adicionar</Link>
-                                <Link to="/NfEdit" className="sidebar-sub-item">3.3.2- Editar/Remover</Link>
-                                <Link to="/NfIndex" className="sidebar-sub-item">3.3.3- Visualizar</Link>
+                                <Link to="/InvoicePurchaseIndex" className="sidebar-sub-item"> Visualizar</Link>
+                                <Link to="/InvoicePurchaseAdd" className="sidebar-sub-item">Adicionar</Link>
+                                <Link to="/InvoicePurchaseEdit" className="sidebar-sub-item">Editar</Link>
+                                <Link to="/InvoicePurchaseDelete" className="sidebar-sub-item">Remover</Link>
                             </div>
                         )}
                     </div>

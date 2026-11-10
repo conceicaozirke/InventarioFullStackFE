@@ -1,4 +1,4 @@
-/* Reseta margens e garante que a raiz ocupe 100% da tela para o Flexbox funcionar */
+
 html, body, #root {
     margin: 0;
     padding: 0;

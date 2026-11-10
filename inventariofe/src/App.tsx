@@ -2,6 +2,7 @@
 import Navbar from './components/Navbar'; // Mantém o seu import original
 import { DocTypeIndex, DocTypeAdd, DocTypeEdit, DocTypeDelete } from './pages/DocType';
 import { BrandIndex, BrandAdd, BrandEdit, BrandDelete } from './pages/Brand';
+import { InvoicePurchaseAdd,InvoicePurchaseDelete,InvoicePurchaseEdit,InvoicePurchaseIndex } from './pages/InvoicePurchase';
 
 import './App.css';
 
@@ -19,11 +20,15 @@ export function App() {
                         <Route path= "/BrandIndex" element={<BrandIndex/>} />
                         <Route path= "/BrandAdd" element={<BrandAdd/>} />
                         <Route path= "/BrandEdit" element={<BrandEdit/>} />
-                        <Route path= "/BrandDelete" element={<BrandDelete/>} />
+                        <Route path="/BrandDelete" element={<BrandDelete />} />
+                        <Route path="/InvoicePurchaseAdd" element={<InvoicePurchaseAdd />} />
+                        <Route path="/InvoicePurchaseIndex" element={<InvoicePurchaseIndex />} />
+                        <Route path="/InvoicePurchaseDelete" element={<InvoicePurchaseDelete />} />
+                        <Route path="/InvoicePurchaseEdit" element={<InvoicePurchaseEdit />} />
                         <Route path="/" element={
                             <div className="container">
                                 <h1 className="title">Início – Inventário Web</h1>
-                                <p className="status-text">Bem-vindo à página inicial exclusiva!</p>
+                                <p className="status-text">Bem-vindo à página inicial do Inventário!</p>
                             </div>
                         } />
                     </Routes>
